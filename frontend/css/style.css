@@ -1,0 +1,234 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Inter", sans-serif;
+}
+ 
+body {
+    background: url("../images/background.png");
+    color: #f2f2f2;
+}
+ 
+.container {
+    width: 100%;
+    height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden; /* impede scroll indesejado */
+}
+ 
+/* Login */
+.login {
+    display: none;                 /* começa escondido */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 330px;
+    background-color: #212121;
+    border-radius: 5px;
+    padding: 20px;
+    gap: 20px;
+}
+ 
+.login > h2 {
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+ 
+.login__form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+ 
+.login__input {
+    border: none;
+    padding: 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background-color: #121212;
+    color: #f2f2f2;
+    outline: none;
+    border-radius: 5px;
+}
+ 
+.login__input:focus {
+    outline: 2px solid #f2f2f2;
+}
+ 
+.login__button {
+    border: none;
+    padding: 15px;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    background-color: #ddd;
+    cursor: pointer;
+    color: #121212;
+    transition: background 0.2s ease;
+}
+ 
+.login__button:hover {
+    background-color: #fff;
+}
+ 
+/* Botão voltar */
+.back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    padding: 6px 12px;
+    background-color: #333;
+    color: #f2f2f2;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 1000;
+    transition: background 0.2s ease;
+}
+ 
+.back-button:hover {
+    background-color: #555;
+}
+ 
+/* Chat */
+.chat {
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+}
+ 
+.chat__messages {
+    flex: 1 1 auto;
+    padding: 30px 20px 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 12px;
+    overflow-y: auto;
+    align-items: flex-start;
+}
+ 
+.chat__messages > div {
+    display: inline-block;
+    padding: 10px 14px;
+    max-width: 70%;
+    word-break: break-word;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.35;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+}
+ 
+.message--self {
+    background-color: #f2f2f2;
+    color: #121212;
+    border-radius: 10px 10px 0 10px;
+    align-self: flex-end;
+    margin-left: auto;
+}
+ 
+.message--other {
+    background-color: #333;
+    color: #f2f2f2;
+    border-radius: 0 10px 10px 10px;
+    align-self: flex-start;
+    margin-right: auto;
+}
+ 
+.message--sender {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: cadetblue;
+}
+ 
+.chat__form {
+    background-color: #191919;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+}
+ 
+.chat__input {
+    border: none;
+    padding: 15px;
+    border-radius: 8px;
+    flex-grow: 1;
+    background-color: #212121;
+    outline: none;
+    color: #f2f2f2;
+    font-size: 1rem;
+}
+ 
+.chat__button {
+    border: none;
+    background: none;
+    color: #f2f2f2;
+    cursor: pointer;
+}
+ 
+.chat__button > span {
+    font-size: 1.8rem;
+}
+ 
+/* Seletor de idiomas */
+.seletor_idiomas {
+    width: 100%;
+    max-width: 350px;
+    background-color: #212121;
+    border-radius: 5px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: height 0.3s ease;
+    height: auto; /* deixa ajustar automaticamente */
+}
+ 
+.seletor_idiomas > h2 {
+    margin-bottom: 40px;
+    text-align: center;
+}
+ 
+.seletor__form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+ 
+.seletor__input {
+    border: none;
+    width: 200px;
+    padding: 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background-color: #121212;
+    color: #f2f2f2;
+    outline: none;
+    border-radius: 5px;
+}
+ 
+.seletor__input:focus {
+    outline: 2px solid #f2f2f2;
+}
+ 
+.seletor_idiomas.dropdown-open {
+    height: 220px;
+}
