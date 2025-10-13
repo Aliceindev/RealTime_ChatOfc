@@ -1,16 +1,22 @@
-const { WebSocketServer } = require("ws")
-const dotenv = require("dotenv")
+import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
 
-dotenv.config()
+dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const wss = new WebSocketServer({ port: process.env.PORT || 8080 })
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-wss.on("connection", (ws) => {
-    ws.on("error", console.error)
+// Servir frontend
+app.use(express.static(path.join(__dirname, "../../frontend")));
 
-    ws.on("message", (data) => {
-        wss.clients.forEach((client) => client.send(data.toString()))
-    })
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../../frontend/index.html"));
+});
 
-    console.log("client connected")
-})
+app.listen(PORT, () => {
+  console.log(`🌐 Servidor frontend rodando na porta ${PORT}`);
+});

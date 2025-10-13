@@ -66,7 +66,10 @@ const handleLogin = event => {
   showScreen("chat");
   history.pushState({ screen: "chat" }, "");
 
-  socket = io();  // se conecta automaticamente ao mesmo host
+  //socket = io();  // se conecta automaticamente ao mesmo host
+  socket = io("wss://realtime-chat-backend.onrender.com", {
+  transports: ["websocket"],
+});
 
 
   socket.on("connect", () => {

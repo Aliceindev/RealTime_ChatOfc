@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: realtime-chat-backend
-    env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn -k eventlet -w 1 backend.python.app:app"
-    runtime: python
-    autoDeploy: true

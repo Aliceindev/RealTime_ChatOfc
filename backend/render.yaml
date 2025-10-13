@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: realtime-chat-backend
+    env: python
+    buildCommand: "pip install -r backend/python/requirements.txt"
+    startCommand: "gunicorn -k eventlet -w 1 backend.python.app:app"
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+
+  - type: web
+    name: realtime-chat-frontend
+    env: node
+    buildCommand: "cd backend/src && npm install"
+    startCommand: "node backend/src/server.js"
+    plan: free
+    autoDeploy: true
