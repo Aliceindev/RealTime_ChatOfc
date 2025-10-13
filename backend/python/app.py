@@ -14,6 +14,7 @@ def create_app():
         static_folder=FRONTEND_DIR,
         template_folder=os.path.join(BASE_DIR, "templates")
     )
+    app.config['SECRET_KEY'] = os.urandom(24)  # chave secreta segura
     return app
 
 app = create_app()
@@ -52,9 +53,9 @@ def register_user(data):
 
 @socketio.on('message')
 def handle_message(data):
-    # Criando o tradutor dentro do evento garante contexto correto
+    # Garantir que o Translator rode dentro do contexto do evento
     translator = Translator()
-    
+
     sender_id = data.get('userId')
     sender_name = data.get('userName')
     sender_color = data.get('userColor')
@@ -62,6 +63,7 @@ def handle_message(data):
 
     print(f"Mensagem recebida de {sender_name}: {original_text}")
 
+    # Envia a mensagem traduzida para cada usuário
     for uid, info in users.items():
         try:
             target_lang = info.get('lang', 'en')  # fallback para inglês
@@ -74,8 +76,9 @@ def handle_message(data):
                 'content': translated_text
             }, room=info['sid'])
         except Exception as e:
-            print("Erro na tradução:", e)
+            print(f"Erro na tradução para {uid}: {e}")
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
+    # Debug False para produção; host 0.0.0.0 necessário no Render
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
