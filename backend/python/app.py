@@ -3,18 +3,25 @@ from flask import Flask, render_template, request
 from flask_socketio import SocketIO
 from googletrans import Translator
 
+# Diretórios do projeto
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "..", "frontend"))
 
-app = Flask(
-    __name__,
-    static_folder=FRONTEND_DIR,
-    template_folder=os.path.join(BASE_DIR, "templates")
-)
+# Criação da aplicação Flask
+def create_app():
+    app = Flask(
+        __name__,
+        static_folder=FRONTEND_DIR,
+        template_folder=os.path.join(BASE_DIR, "templates")
+    )
+    return app
 
-# Flask-SocketIO com eventlet (Render requer CORS liberado)
-socketio = SocketIO(app, cors_allowed_origins="*")
-translator = Translator()
+app = create_app()
+
+# Configuração do Flask-SocketIO com Eventlet
+socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
+
+# Dicionário de usuários conectados
 users = {}
 
 @app.route('/')
@@ -45,6 +52,9 @@ def register_user(data):
 
 @socketio.on('message')
 def handle_message(data):
+    # Criando o tradutor dentro do evento garante contexto correto
+    translator = Translator()
+    
     sender_id = data.get('userId')
     sender_name = data.get('userName')
     sender_color = data.get('userColor')
@@ -54,8 +64,9 @@ def handle_message(data):
 
     for uid, info in users.items():
         try:
-            target_lang = info.get('lang')
+            target_lang = info.get('lang', 'en')  # fallback para inglês
             translated_text = translator.translate(original_text, dest=target_lang).text
+
             socketio.emit('chat_message', {
                 'userId': sender_id,
                 'userName': sender_name,
@@ -67,4 +78,4 @@ def handle_message(data):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, host='0.0.0.0', port=port)
+    socketio.run(app, host='0.0.0.0', port=port, debug=False)
