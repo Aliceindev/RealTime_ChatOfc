@@ -1,34 +1,34 @@
+import os
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO
 from googletrans import Translator
-import os
 
-# Caminho absoluto da pasta atual (onde este app.py está)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Caminho absoluto para a pasta frontend (a partir da raiz do repo)
+FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "..", "frontend"))
 
-# Caminho para a pasta frontend (2 níveis acima)
-STATIC_DIR = os.path.abspath(os.path.join(BASE_DIR, "../../frontend"))
+app = Flask(
+    __name__,
+    static_folder=FRONTEND_DIR,                     # arquivos estáticos (css/js/images)
+    template_folder=os.path.join(BASE_DIR, "templates")  # templates (index.html)
+)
 
-# Cria o app Flask apontando para o frontend como static e templates na pasta python/templates
-app = Flask(__name__,
-            static_folder=STATIC_DIR,
-            template_folder=os.path.join(BASE_DIR, "templates"))
-
+# Permitir CORS para todos, usar eventlet no deploy para websocket
 socketio = SocketIO(app, cors_allowed_origins="*")
-translator = Translator()
 
+translator = Translator()
 users = {}
 
 @app.route('/')
 def home():
-    # renderiza o index.html que está em backend/python/templates/
+    # Se index.html estiver na pasta backend/python/templates, renderiza.
+    # Se você preferir servir o index diretamente do frontend/static, pode usar:
+    # return app.send_static_file('index.html')
     return render_template('index.html')
-
 
 @socketio.on('connect')
 def handle_connect():
-    print("Novo cliente conectado!")
-
+    print("Novo cliente conectado!", request.sid)
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -37,33 +37,29 @@ def handle_disconnect():
         print(f"Usuário desconectado: {users[uid]['name']}")
         del users[uid]
 
-
 @socketio.on('register_user')
 def register_user(data):
     user_id = data['id']
     users[user_id] = {
-        'name': data['name'],
-        'color': data['color'],
-        'lang': data['lang'],
+        'name': data.get('name'),
+        'color': data.get('color'),
+        'lang': data.get('lang'),
         'sid': request.sid
     }
-    print(f"Usuário registrado: {users[user_id]}")
-
+    print("Usuário registrado:", users[user_id])
 
 @socketio.on('message')
 def handle_message(data):
-    sender_id = data['userId']
-    sender_name = data['userName']
-    sender_color = data['userColor']
-    original_text = data['content']
-
+    sender_id = data.get('userId')
+    sender_name = data.get('userName')
+    sender_color = data.get('userColor')
+    original_text = data.get('content', '')
     print(f"Mensagem recebida de {sender_name}: {original_text}")
 
     for uid, info in users.items():
         try:
-            target_lang = info['lang']
+            target_lang = info.get('lang')
             translated_text = translator.translate(original_text, dest=target_lang).text
-
             socketio.emit('chat_message', {
                 'userId': sender_id,
                 'userName': sender_name,
@@ -73,6 +69,7 @@ def handle_message(data):
         except Exception as e:
             print("Erro na tradução:", e)
 
-
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    # Porta que o Render fornece estará em PORT; senão usar 5000 localmente.
+    port = int(os.environ.get('PORT', 5000))
+    socketio.run(app, host='0.0.0.0', port=port, debug=False)
