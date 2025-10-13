@@ -1,1 +1,10 @@
-pythonVersion: "3.11.8"
+services:
+  - type: web
+    name: realtime-chat
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn -k eventlet -w 1 backend.python.app:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
