@@ -1,10 +1,10 @@
 Flask==2.3.2
 flask-socketio==5.3.5
-googletrans==4.0.0-rc1
 eventlet==0.34.3
 python-socketio==5.11.3
 python-engineio==4.10.1
 Werkzeug==2.3.7
 itsdangerous==2.1.2
 Jinja2==3.1.2
-gunicorn
+gunicorn==23.0.0
+googletrans==4.0.0-rc1
