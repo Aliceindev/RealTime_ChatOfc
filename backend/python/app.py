@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO
 from googletrans import Translator
+from flask_cors import CORS 
 
 # Diretórios do projeto
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -14,17 +15,17 @@ def create_app():
         static_folder=FRONTEND_DIR,
         template_folder=os.path.join(BASE_DIR, "templates")
     )
-    app.config['SECRET_KEY'] = os.urandom(24)  # chave secreta segura
+    app.config['SECRET_KEY'] = os.urandom(24)
+    CORS(app) 
     return app
 
 app = create_app()
 
 # Configuração do Flask-SocketIO com Eventlet
-socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
+socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")  # ✅ já está certo
 
 # Dicionário de usuários conectados
 users = {}
-
 @app.route('/')
 def home():
     return "Servidor WebSocket do Chat Realtime está ativo 🚀"
