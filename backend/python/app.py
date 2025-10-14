@@ -1,15 +1,15 @@
 import os
+import time
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO
 from googletrans import Translator
 from flask_cors import CORS
-from threading import Lock  # 🔒 Import do Lock
+from threading import Lock
 
 # Diretórios do projeto
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "..", "frontend"))
 
-# Criação da aplicação Flask
 def create_app():
     app = Flask(
         __name__,
@@ -21,13 +21,12 @@ def create_app():
     return app
 
 app = create_app()
-
-# Configuração do Flask-SocketIO com Eventlet
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
-# Dicionário de usuários conectados
 users = {}
-users_lock = Lock()  # 🔒 Lock global para proteger acesso ao dicionário
+users_lock = Lock()
+translator = Translator()  # Reutiliza instância
+translation_cache = {}     # Cache para acelerar mensagens repetidas
 
 @app.route('/')
 def home():
@@ -59,7 +58,6 @@ def register_user(data):
 
 @socketio.on('message')
 def handle_message(data):
-    translator = Translator()
     sender_id = data.get('userId')
     sender_name = data.get('userName')
     sender_color = data.get('userColor')
@@ -67,30 +65,32 @@ def handle_message(data):
 
     print(f"Mensagem recebida de {sender_name}: {original_text}")
 
-    # 🔒 Copia os usuários de forma segura
     with users_lock:
         current_users = list(users.items())
 
     for uid, info in current_users:
-        try:
-            target_lang = info.get('lang', 'en')
-            translated_text = translator.translate(original_text, dest=target_lang).text
+        target_lang = info.get('lang', 'en')
+        cache_key = (original_text, target_lang)
+        translated_text = translation_cache.get(cache_key)
 
-            socketio.emit('chat_message', {
-                'userId': sender_id,
-                'userName': sender_name,
-                'userColor': sender_color,
-                'content': translated_text
-            }, room=info['sid'])
-        except Exception as e:
-            print(f"Erro na tradução para {uid}: {e}")
-            # Envia a mensagem original como fallback
-            socketio.emit('chat_message', {
-                'userId': sender_id,
-                'userName': sender_name,
-                'userColor': sender_color,
-                'content': original_text
-            }, room=info['sid'])
+        if not translated_text:
+            try:
+                start_time = time.time()
+                translated = translator.translate(original_text, dest=target_lang)
+                translated_text = translated.text
+                translation_cache[cache_key] = translated_text
+                elapsed = time.time() - start_time
+                print(f"Tradução concluída em {elapsed:.2f}s → {target_lang}")
+            except Exception as e:
+                print(f"[⚠️ Erro de tradução → {target_lang}] {e}")
+                translated_text = original_text  # fallback imediato
+
+        socketio.emit('chat_message', {
+            'userId': sender_id,
+            'userName': sender_name,
+            'userColor': sender_color,
+            'content': translated_text
+        }, room=info['sid'])
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
