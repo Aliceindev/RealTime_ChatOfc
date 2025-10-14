@@ -2,7 +2,8 @@ import os
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO
 from googletrans import Translator
-from flask_cors import CORS 
+from flask_cors import CORS
+from threading import Lock  # 🔒 Import do Lock
 
 # Diretórios do projeto
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -16,16 +17,18 @@ def create_app():
         template_folder=os.path.join(BASE_DIR, "templates")
     )
     app.config['SECRET_KEY'] = os.urandom(24)
-    CORS(app) 
+    CORS(app)
     return app
 
 app = create_app()
 
 # Configuração do Flask-SocketIO com Eventlet
-socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*") 
+socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
 # Dicionário de usuários conectados
 users = {}
+users_lock = Lock()  # 🔒 Lock global para proteger acesso ao dicionário
+
 @app.route('/')
 def home():
     return "Servidor WebSocket do Chat Realtime está ativo 🚀"
@@ -36,27 +39,27 @@ def handle_connect():
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    disconnected = [uid for uid, info in users.items() if info['sid'] == request.sid]
-    for uid in disconnected:
-        print(f"Usuário desconectado: {users[uid]['name']}")
-        del users[uid]
+    with users_lock:
+        disconnected = [uid for uid, info in users.items() if info['sid'] == request.sid]
+        for uid in disconnected:
+            print(f"Usuário desconectado: {users[uid]['name']}")
+            del users[uid]
 
 @socketio.on('register_user')
 def register_user(data):
-    user_id = data['id']
-    users[user_id] = {
-        'name': data.get('name'),
-        'color': data.get('color'),
-        'lang': data.get('lang'),
-        'sid': request.sid
-    }
-    print("Usuário registrado:", users[user_id])
+    with users_lock:
+        user_id = data['id']
+        users[user_id] = {
+            'name': data.get('name'),
+            'color': data.get('color'),
+            'lang': data.get('lang'),
+            'sid': request.sid
+        }
+        print("Usuário registrado:", users[user_id])
 
 @socketio.on('message')
 def handle_message(data):
-    # Garantir que o Translator rode dentro do contexto do evento
     translator = Translator()
-
     sender_id = data.get('userId')
     sender_name = data.get('userName')
     sender_color = data.get('userColor')
@@ -64,10 +67,13 @@ def handle_message(data):
 
     print(f"Mensagem recebida de {sender_name}: {original_text}")
 
-    # Envia a mensagem traduzida para cada usuário
-    for uid, info in users.items():
+    # 🔒 Copia os usuários de forma segura
+    with users_lock:
+        current_users = list(users.items())
+
+    for uid, info in current_users:
         try:
-            target_lang = info.get('lang', 'en')  # fallback para inglês
+            target_lang = info.get('lang', 'en')
             translated_text = translator.translate(original_text, dest=target_lang).text
 
             socketio.emit('chat_message', {
@@ -78,9 +84,14 @@ def handle_message(data):
             }, room=info['sid'])
         except Exception as e:
             print(f"Erro na tradução para {uid}: {e}")
-            translated_text = original_text
+            # Envia a mensagem original como fallback
+            socketio.emit('chat_message', {
+                'userId': sender_id,
+                'userName': sender_name,
+                'userColor': sender_color,
+                'content': original_text
+            }, room=info['sid'])
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    # Debug False para produção; host 0.0.0.0 necessário no Render
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
