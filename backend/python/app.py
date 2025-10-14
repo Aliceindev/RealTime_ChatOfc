@@ -22,7 +22,7 @@ def create_app():
 app = create_app()
 
 # Configuração do Flask-SocketIO com Eventlet
-socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")  # ✅ já está certo
+socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*") 
 
 # Dicionário de usuários conectados
 users = {}
@@ -78,6 +78,7 @@ def handle_message(data):
             }, room=info['sid'])
         except Exception as e:
             print(f"Erro na tradução para {uid}: {e}")
+            translated_text = original_text
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
