@@ -27,7 +27,7 @@ users = {}
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return "Servidor WebSocket do Chat Realtime está ativo 🚀"
 
 @socketio.on('connect')
 def handle_connect():
