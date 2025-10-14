@@ -9,11 +9,3 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
-
-  - type: web
-    name: realtime-chat-frontend
-    env: node
-    buildCommand: "cd backend/src && npm install"
-    startCommand: "node backend/src/server.js"
-    plan: free
-    autoDeploy: true

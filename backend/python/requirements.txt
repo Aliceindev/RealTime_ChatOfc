@@ -6,3 +6,4 @@ python-socketio==5.11.3
 python-engineio==4.10.1
 googletrans==4.0.0-rc1
 gunicorn==23.0.0
+flask-cors
