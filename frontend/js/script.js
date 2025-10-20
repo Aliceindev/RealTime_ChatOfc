@@ -66,13 +66,7 @@ const handleLogin = event => {
   showScreen("chat");
   history.pushState({ screen: "chat" }, "");
 
-  socket = io("https://realtime-chatofc.onrender.com", {
-  transports: ["websocket"],
-});
-//socket = io("http://localhost:5000", { transports: ["websocket"] });
-socket.on("connect_error", (err) => {
-  console.error("Erro de conexão com servidor:", err.message);
-});
+  socket = io();  // se conecta automaticamente ao mesmo host
 
 
   socket.on("connect", () => {
